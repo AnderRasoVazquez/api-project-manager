@@ -49,11 +49,27 @@ class Task(db.Model):
     project_id = db.Column(db.String(50), db.ForeignKey('project.project_id'))
 
 
+class UserSchema(ma.Schema):
+    """Esquema para la clase usuario."""
+    class Meta:
+        fields = ('user_id', 'name', 'email', 'admin')
+
+
 class ProjectSchema(ma.ModelSchema):
     """Esquema para la clase proyectos."""
     class Meta:
         model = Project
 
 
+class TaskSchema(ma.ModelSchema):
+    """Esquema para la clase proyectos."""
+    class Meta:
+        model = Task
+
+
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+task_schema = TaskSchema()
+tasks_schema = TaskSchema(many=True)
 project_schema = ProjectSchema()
 projects_schema = ProjectSchema(many=True)
