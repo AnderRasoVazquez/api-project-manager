@@ -57,10 +57,10 @@ def add_initial_values():
     return jsonify({'message': 'Initial values created!'})
 
 
-app.register_blueprint(project_api)
-app.register_blueprint(task_api)
 app.register_blueprint(login_api)
 app.register_blueprint(user_api)
+app.register_blueprint(project_api)
+app.register_blueprint(task_api)
 
 
 if __name__ == '__main__':
