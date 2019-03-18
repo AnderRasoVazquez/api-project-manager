@@ -49,10 +49,14 @@ class Task(db.Model):
     project_id = db.Column(db.String(50), db.ForeignKey('project.project_id'))
 
 
-class UserSchema(ma.Schema):
+class UserSchema(ma.ModelSchema):
     """Esquema para la clase usuario."""
     class Meta:
-        fields = ('user_id', 'name', 'email', 'admin')
+        fields = ('user_id', 'name', 'email', 'admin', '_links')
+
+    _links = ma.Hyperlinks(
+        {"self": ma.URLFor("user_api.get_one_user", user_id="<user_id>"), "collection": ma.URLFor("user_api.get_all_users")}
+    )
 
 
 class ProjectSchema(ma.ModelSchema):
@@ -60,12 +64,20 @@ class ProjectSchema(ma.ModelSchema):
     class Meta:
         model = Project
 
+    _links = ma.Hyperlinks(
+        {"self": ma.URLFor("project_api.get_one_project", project_id="<project_id>"), "collection": ma.URLFor("project_api.get_user_projects")}
+    )
+
 
 class TaskSchema(ma.ModelSchema):
     """Esquema para la clase proyectos."""
     class Meta:
         model = Task
 
+    _links = ma.Hyperlinks(
+        # {"self": ma.URLFor("task_api.get_one_task", task_id="<task_id>"), "collection": ma.URLFor("task_api.get_all_tasks", project_id="<project_id>")}
+        {"self": ma.URLFor("task_api.get_one_task", task_id="<task_id>"), "collection": ma.URLFor("task_api.get_all_tasks", project_id="<project_id>")}
+    )
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)

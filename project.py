@@ -54,7 +54,7 @@ def create_project(current_user: User):
 
 @project_api.route('/api/v1/projects/<project_id>', methods=['DELETE'])
 @token_required
-def delete_user(current_user, project_id):
+def delete_project(current_user, project_id):
     """Elimina un proyecto."""
     project = Project.query.filter_by(project_id=project_id).first()
 
@@ -67,3 +67,18 @@ def delete_user(current_user, project_id):
     db.session.delete(project)
     db.session.commit()
     return jsonify({'message': 'The project has been deleted!'})
+
+
+@project_api.route('/api/v1/projects/<project_id>', methods=['GET'])
+@token_required
+def get_one_project(current_user, project_id):
+    """Elimina un proyecto."""
+    project = Project.query.filter_by(project_id=project_id).first()
+
+    if not project:
+        return jsonify({'message': 'No project found!'}), 404
+
+    if current_user not in project.members:
+        return jsonify({'message': 'You don\'t have permission to delete that project!'}), 403
+
+    return jsonify({'project': project_schema.dump(project).data})
