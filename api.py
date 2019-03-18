@@ -1,7 +1,7 @@
-from flask import Flask
+from flask import Flask, jsonify
 from werkzeug.security import generate_password_hash
-from login import login_api
 from model import *
+from login import login_api
 from project import project_api
 from task import task_api
 from user import user_api
@@ -10,15 +10,24 @@ from user import user_api
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'thisissecret'
-
 # TODO change for postgresql
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project_manager.db'
+
 
 db.init_app(app)
 ma.init_app(app)
 
 
-# TODO ya se validar con cerberus, seria interesante serializarlo con marshmallow
+def initial_setup():
+    """Ejecutar desde la terminal para crear la base de datos y datos de prueba.
+    import api
+    api.initial_setup()
+    """
+    with app.app_context():
+        db.create_all()
+        add_initial_values()
+
+
 def add_initial_values():
     """Añadir valores iniciales a la base de datos."""
     hashed_password = generate_password_hash('admin', method='sha256')
@@ -33,6 +42,8 @@ def add_initial_values():
 
     project = Project(name='TFG', desc='Tareas para el TFG')
     db.session.add(project)
+    projectTwo = Project(name='User project', desc='Tareas para el user project')
+    db.session.add(project)
     db.session.commit()
 
     task = Task(name="A task", project=project)
@@ -40,7 +51,10 @@ def add_initial_values():
     db.session.commit()
 
     user.projects.append(project)
+    user.projects.append(projectTwo)
+    admin.projects.append(project)
     db.session.commit()
+    return jsonify({'message': 'Initial values created!'})
 
 
 app.register_blueprint(project_api)
