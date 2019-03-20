@@ -5,6 +5,8 @@ from login import login_api
 from project import project_api
 from task import task_api
 from user import user_api
+from work import work_api
+from datetime import date
 
 # https://www.restapitutorial.com/httpstatuscodes.html
 
@@ -25,10 +27,10 @@ def initial_setup():
     """
     with app.app_context():
         db.create_all()
-        add_initial_values()
+        _add_initial_values()
 
 
-def add_initial_values():
+def _add_initial_values():
     """Añadir valores iniciales a la base de datos."""
     hashed_password = generate_password_hash('admin', method='sha256')
     admin = User(name='admin', email='admin', password=hashed_password, admin=True)
@@ -54,6 +56,11 @@ def add_initial_values():
     user.projects.append(projectTwo)
     admin.projects.append(project)
     db.session.commit()
+
+    work = Work(date=date(2019, 8, 15), time=7.5, task_id=task.task_id, user_id=admin.user_id)
+    db.session.add(work)
+    db.session.commit()
+
     return jsonify({'message': 'Initial values created!'})
 
 
@@ -61,6 +68,7 @@ app.register_blueprint(login_api)
 app.register_blueprint(user_api)
 app.register_blueprint(project_api)
 app.register_blueprint(task_api)
+app.register_blueprint(work_api)
 
 
 if __name__ == '__main__':

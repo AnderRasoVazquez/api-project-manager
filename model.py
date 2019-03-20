@@ -26,6 +26,7 @@ class User(db.Model):
     admin = db.Column(db.Boolean, default=False)
 
     projects = db.relationship('Project', secondary=project_member, backref=db.backref('members'))
+    works = db.relationship('Work', backref=db.backref('user'))
 
 
 class Project(db.Model):
@@ -47,6 +48,17 @@ class Task(db.Model):
     progress = db.Column(db.Integer(), default=0)
 
     project_id = db.Column(db.String(50), db.ForeignKey('project.project_id'))
+    works = db.relationship('Work', backref=db.backref('task'))
+
+
+class Work(db.Model):
+    work_id = db.Column(db.String, default=generate_uuid, nullable=False, unique=True)
+
+    task_id = db.Column(db.String(50), db.ForeignKey('task.task_id'), primary_key=True)
+    user_id = db.Column(db.String(50), db.ForeignKey('user.user_id'), primary_key=True)
+
+    date = db.Column(db.Date, primary_key=True)
+    time = db.Column(db.Float(), nullable=False)
 
 
 class UserSchema(ma.ModelSchema):
@@ -75,9 +87,19 @@ class TaskSchema(ma.ModelSchema):
         model = Task
 
     _links = ma.Hyperlinks(
-        # {"self": ma.URLFor("task_api.get_one_task", task_id="<task_id>"), "collection": ma.URLFor("task_api.get_all_tasks", project_id="<project_id>")}
         {"self": ma.URLFor("task_api.get_one_task", task_id="<task_id>"), "collection": ma.URLFor("task_api.get_all_tasks", project_id="<project_id>")}
     )
+
+
+class WorkSchema(ma.ModelSchema):
+    """Esquema para la clase proyectos."""
+    class Meta:
+        model = Work
+
+    _links = ma.Hyperlinks(
+        {"self": ma.URLFor("work_api.get_one_work", work_id="<work_id>"), "collection": ma.URLFor("work_api.get_all_task_work", task_id="<task_id>")}
+    )
+
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -85,3 +107,5 @@ task_schema = TaskSchema()
 tasks_schema = TaskSchema(many=True)
 project_schema = ProjectSchema()
 projects_schema = ProjectSchema(many=True)
+work_schema = WorkSchema()
+works_schema = WorkSchema(many=True)

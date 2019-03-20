@@ -72,7 +72,7 @@ def delete_project(current_user, project_id):
 @project_api.route('/api/v1/projects/<project_id>', methods=['GET'])
 @token_required
 def get_one_project(current_user, project_id):
-    """Elimina un proyecto."""
+    """Devuelve un proyecto."""
     project = Project.query.filter_by(project_id=project_id).first()
 
     if not project:
@@ -82,3 +82,6 @@ def get_one_project(current_user, project_id):
         return jsonify({'message': 'You don\'t have permission to delete that project!'}), 403
 
     return jsonify({'project': project_schema.dump(project).data})
+
+
+# TODO edit project
