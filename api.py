@@ -9,16 +9,18 @@ from work import work_api
 from datetime import date
 from flask_heroku import Heroku
 
+import os
+
 # https://www.restapitutorial.com/httpstatuscodes.html
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'thisissecret'
 
-# TODO change for postgresql
 # si local usar
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///das'  # postgresql
-# si en heroku
-heroku = Heroku(app)
+if 'HEROKU' in os.environ:  # heroku config:set HEROKU=1
+    heroku = Heroku(app)
+else: # local
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///das'  # postgresql
 
 # Creating heroku-postgresql:hobby-dev on ⬢ proyecto-das... free
 # Database has been created and is available
