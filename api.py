@@ -7,13 +7,16 @@ from task import task_api
 from user import user_api
 from work import work_api
 from datetime import date
+from flask_heroku import Heroku
 
 # https://www.restapitutorial.com/httpstatuscodes.html
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'thisissecret'
+
 # TODO change for postgresql
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///das'  # postgresql
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///das'  # postgresql
+
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/das'  # postgresql
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project_manager.db'  # sqlite
 
@@ -24,7 +27,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///das'  # postgresql
 # Created postgresql-defined-97454 as DATABASE_URL
 # Use heroku addons:docs heroku-postgresql to view documentation
 
-
+heroku = Heroku(app)
 db.init_app(app)
 ma.init_app(app)
 
