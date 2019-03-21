@@ -15,10 +15,10 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'thisissecret'
 
 # TODO change for postgresql
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///das'  # postgresql
-
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/das'  # postgresql
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project_manager.db'  # sqlite
+# si local usar
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///das'  # postgresql
+# si en heroku
+heroku = Heroku(app)
 
 # Creating heroku-postgresql:hobby-dev on ⬢ proyecto-das... free
 # Database has been created and is available
@@ -27,13 +27,13 @@ app.config['SECRET_KEY'] = 'thisissecret'
 # Created postgresql-defined-97454 as DATABASE_URL
 # Use heroku addons:docs heroku-postgresql to view documentation
 
-heroku = Heroku(app)
 db.init_app(app)
 ma.init_app(app)
 
 
 def initial_setup():
     """Ejecutar desde la terminal para crear la base de datos y datos de prueba.
+    heroku run python3
     import api
     api.initial_setup()
     """
