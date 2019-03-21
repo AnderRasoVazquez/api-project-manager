@@ -84,6 +84,8 @@ class ProjectSchema(ma.ModelSchema):
 class TaskSchema(ma.ModelSchema):
     """Esquema para la clase proyectos."""
     class Meta:
+        # TODO date
+        # https://stackoverflow.com/questions/35795622/short-way-to-serialize-datetime-with-marshmallow
         model = Task
 
     _links = ma.Hyperlinks(

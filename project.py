@@ -30,7 +30,7 @@ def get_user_projects(current_user):
 @project_api.route('/api/v1/projects', methods=['POST'])
 @token_required
 def create_project(current_user: User):
-    """Devolver todos los proyectos."""
+    """Crea un proyecto."""
     try:
         data = json.loads(request.data)
     except:
@@ -84,4 +84,35 @@ def get_one_project(current_user, project_id):
     return jsonify({'project': project_schema.dump(project).data})
 
 
-# TODO edit project
+@project_api.route('/api/v1/projects/<project_id>', methods=['POST'])
+@token_required
+def update_project(current_user, project_id):
+    """Actualiza un proyecto."""
+    try:
+        # TODO comprobar si esta vacio? no afecta a la funcionalidad
+        data = json.loads(request.data)
+    except:
+        return jsonify({'message': 'Bad request'}), 400
+
+    project = Project.query.filter_by(project_id=project_id).first()
+
+    if not project:
+        return jsonify({'message': 'No project found!'}), 404
+
+    if current_user not in project.members:
+        return jsonify({'message': 'You don\'t have permission to delete that project!'}), 403
+
+    schema = {
+        'name': {'type': 'string', 'empty': False},
+        'desc': {'type': 'string', 'empty': False}
+    }
+
+    validator = Validator(schema)
+
+    if validator.validate(data):
+        for key, value in data.items():
+            setattr(project, key, value)
+        db.session.commit()
+        return jsonify({'message': 'Project updated!', 'project': project_schema.dump(project).data}), 200
+    else:
+        return jsonify({'message': 'Project not updated!', 'errors': validator.errors}), 400

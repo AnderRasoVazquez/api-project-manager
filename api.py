@@ -19,7 +19,7 @@ app.config['SECRET_KEY'] = 'thisissecret'
 # si local usar
 if 'HEROKU' in os.environ:  # heroku config:set HEROKU=1
     heroku = Heroku(app)
-else: # local
+else:  # local
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///das'  # postgresql
 
 # Creating heroku-postgresql:hobby-dev on ⬢ proyecto-das... free
