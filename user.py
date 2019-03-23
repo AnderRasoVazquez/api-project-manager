@@ -1,10 +1,9 @@
 from flask import jsonify, request, Blueprint
 from cerberus import Validator
-from decorators import token_required, admin_required
+from decorators import token_required, admin_required, load_data
 from werkzeug.security import generate_password_hash
-from model import db, User, user_schema, users_schema
-import uuid
-import json
+from model import db, User, user_schema, users_schema, create_user_validator
+
 
 user_api = Blueprint('user_api', __name__)
 
@@ -20,34 +19,22 @@ def get_all_users(current_user):
 
 
 @user_api.route('/api/v1/users', methods=['POST'])
-@token_required
-def create_user(current_user):
+@load_data
+def create_user(data):
     """Crea un usuario."""
-    # TODO esto tendria que ser en todas partes?
-    try:
-        data = json.loads(request.data)
-    except:
-        return jsonify({'message': 'Bad request'}), 400
-
-    schema = {
-        'email': {'type': 'string', 'required': True, 'empty': False},
-        'name': {'type': 'string', 'required': True, 'empty': False},
-        'password': {'type': 'string', 'required': True, 'empty': False}
-    }
-    validator = Validator(schema)
-
-    if validator.validate(data):
+    if create_user_validator.validate(data):
         # Check if user exists
         if User.query.filter_by(email=data['email']).first():
             return jsonify({'message': 'User already exists'}), 409
+
         hashed_password = generate_password_hash(data['password'], method='sha256')
         new_user = User(name=data['name'], email=data['email'], password=hashed_password, admin=False)
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({'message': 'New user created!', 'user': user_schema.dump(new_user).data}), 201
 
+        return jsonify({'message': 'New user created!', 'user': user_schema.dump(new_user).data}), 201
     else:
-        return jsonify({'message': 'User not created!', 'errors': validator.errors}), 400
+        return jsonify({'message': 'User not created!', 'errors': create_user_validator.errors}), 400
 
 
 @user_api.route('/api/v1/users/<user_id>', methods=['GET'])
