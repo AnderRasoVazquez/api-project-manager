@@ -16,7 +16,6 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'thisissecret'
 
-# si local usar
 if 'HEROKU' in os.environ:  # heroku config:set HEROKU=1
     heroku = Heroku(app)
 else:  # local
