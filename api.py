@@ -22,12 +22,6 @@ if 'HEROKU' in os.environ:  # heroku config:set HEROKU=1
 else:  # local
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///das'  # postgresql
 
-# Creating heroku-postgresql:hobby-dev on ⬢ proyecto-das... free
-# Database has been created and is available
-#  ! This database is empty. If upgrading, you can transfer
-#  ! data from another database with pg:copy
-# Created postgresql-defined-97454 as DATABASE_URL
-# Use heroku addons:docs heroku-postgresql to view documentation
 
 db.init_app(app)
 ma.init_app(app)
