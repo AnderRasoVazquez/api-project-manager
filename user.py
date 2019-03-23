@@ -1,5 +1,4 @@
-from flask import jsonify, request, Blueprint
-from cerberus import Validator
+from flask import jsonify, Blueprint
 from decorators import token_required, admin_required, load_data
 from werkzeug.security import generate_password_hash
 from model import db, User, user_schema, users_schema, create_user_validator

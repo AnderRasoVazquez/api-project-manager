@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 from model import works_schema, work_schema, Task, db, Work, create_work_validator, update_work_validator
 from decorators import token_required, load_data
 
