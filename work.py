@@ -48,7 +48,7 @@ def delete_work(current_user, work_id):
     if not work:
         return jsonify({'message': 'No work found!'}), 404
 
-    if current_user not in work.task.project.members:
+    if current_user.user_id != work.user_id:
         return jsonify({'message': 'You don\'t have permission to delete this work!'}), 403
 
     db.session.delete(work)
