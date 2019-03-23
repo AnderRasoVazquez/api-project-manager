@@ -1,9 +1,16 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from cerberus import Validator
 import uuid
+import datetime
 
 db = SQLAlchemy()
 ma = Marshmallow()
+
+
+def _to_date(s):
+    """Convierte un string a una fecha."""
+    return datetime.datetime.strptime(s, '%Y-%m-%d')
 
 
 def generate_uuid():
@@ -11,6 +18,7 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
+# Tabla para miembros de proyectos
 project_member = db.Table('project_member',
                           db.Column('user_id', db.String(50), db.ForeignKey('user.user_id'), primary_key=True),
                           db.Column('project_id', db.String(50), db.ForeignKey('project.project_id'), primary_key=True)
@@ -29,6 +37,14 @@ class User(db.Model):
     works = db.relationship('Work', backref=db.backref('user'))
 
 
+_user_creation_schema = {
+    'email': {'type': 'string', 'required': True, 'empty': False},
+    'name': {'type': 'string', 'required': True, 'empty': False},
+    'password': {'type': 'string', 'required': True, 'empty': False}
+}
+create_user_validator = Validator(_user_creation_schema)
+
+
 class Project(db.Model):
     """Tabla proyectos de la base de datos."""
     project_id = db.Column(db.String, primary_key=True, default=generate_uuid)
@@ -36,6 +52,19 @@ class Project(db.Model):
     desc = db.Column(db.String(300))
 
     tasks = db.relationship('Task', backref=db.backref('project'))
+
+
+_project_creation_schema = {
+    'name': {'type': 'string', 'required': True, 'empty': False},
+    'desc': {'type': 'string', 'empty': False}
+}
+create_project_validator = Validator(_project_creation_schema)
+
+_project_update_schema = {
+    'name': {'type': 'string', 'empty': False},
+    'desc': {'type': 'string', 'empty': False}
+}
+update_project_validator = Validator(_project_update_schema)
 
 
 class Task(db.Model):
@@ -51,6 +80,27 @@ class Task(db.Model):
     works = db.relationship('Work', backref=db.backref('task'))
 
 
+_task_creation_schema = {
+    'name': {'type': 'string', 'required': True, 'empty': False},
+    'desc': {'type': 'string', 'empty': False},
+    'due_date': {'type': 'date', 'empty': False, 'coerce': _to_date},
+    'init_date': {'type': 'date', 'empty': False, 'coerce': _to_date},
+    'expected': {'type': 'float', 'empty': False, 'min': 0},
+    'progress': {'type': 'integer', 'empty': False, 'min': 0, 'max': 100}
+}
+create_task_validator = Validator(_task_creation_schema)
+
+_task_update_schema = {
+    'name': {'type': 'string', 'empty': False},
+    'desc': {'type': 'string', 'empty': False},
+    'due_date': {'type': 'date', 'empty': False, 'coerce': _to_date},
+    'init_date': {'type': 'date', 'empty': False, 'coerce': _to_date},
+    'expected': {'type': 'float', 'empty': False, 'min': 0},
+    'progress': {'type': 'integer', 'empty': False, 'min': 0, 'max': 100}
+}
+update_task_validator = Validator(_task_update_schema)
+
+
 class Work(db.Model):
     work_id = db.Column(db.String, default=generate_uuid, nullable=False, unique=True)
 
@@ -61,45 +111,65 @@ class Work(db.Model):
     time = db.Column(db.Float(), nullable=False)
 
 
+_work_creation_schema = {
+    'date': {'type': 'date', 'empty': False, 'coerce': _to_date, 'required': True},
+    'time': {'type': 'float', 'empty': False, 'required': True}
+}
+create_work_validator = Validator(_work_creation_schema)
+
+_work_update_schema = {
+    'time': {'type': 'float', 'empty': False, 'required': True}
+}
+update_work_validator = Validator(_work_update_schema)
+
+
 class UserSchema(ma.ModelSchema):
     """Esquema para la clase usuario."""
+
     class Meta:
         fields = ('user_id', 'name', 'email', 'admin', '_links')
 
     _links = ma.Hyperlinks(
-        {"self": ma.URLFor("user_api.get_one_user", user_id="<user_id>"), "collection": ma.URLFor("user_api.get_all_users")}
+        {"self": ma.URLFor("user_api.get_one_user", user_id="<user_id>"),
+         "collection": ma.URLFor("user_api.get_all_users")}
     )
 
 
 class ProjectSchema(ma.ModelSchema):
     """Esquema para la clase proyectos."""
+
     class Meta:
         model = Project
 
     _links = ma.Hyperlinks(
-        {"self": ma.URLFor("project_api.get_one_project", project_id="<project_id>"), "collection": ma.URLFor("project_api.get_user_projects")}
+        {"self": ma.URLFor("project_api.get_one_project", project_id="<project_id>"),
+         "collection": ma.URLFor("project_api.get_user_projects")}
     )
 
 
 class TaskSchema(ma.ModelSchema):
     """Esquema para la clase proyectos."""
+
     class Meta:
         # TODO date
         # https://stackoverflow.com/questions/35795622/short-way-to-serialize-datetime-with-marshmallow
         model = Task
 
     _links = ma.Hyperlinks(
-        {"self": ma.URLFor("task_api.get_one_task", task_id="<task_id>"), "collection": ma.URLFor("task_api.get_all_tasks", project_id="<project_id>")}
+        {"self": ma.URLFor("task_api.get_one_task", task_id="<task_id>"),
+         "collection": ma.URLFor("task_api.get_all_tasks", project_id="<project_id>")}
     )
 
 
 class WorkSchema(ma.ModelSchema):
     """Esquema para la clase proyectos."""
+
     class Meta:
         model = Work
 
     _links = ma.Hyperlinks(
-        {"self": ma.URLFor("work_api.get_one_work", work_id="<work_id>"), "collection": ma.URLFor("work_api.get_all_task_work", task_id="<task_id>")}
+        {"self": ma.URLFor("work_api.get_one_work", work_id="<work_id>"),
+         "collection": ma.URLFor("work_api.get_all_task_work", task_id="<task_id>")}
     )
 
 
