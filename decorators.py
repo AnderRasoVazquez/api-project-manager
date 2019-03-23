@@ -2,6 +2,7 @@ from functools import wraps
 from flask import request, jsonify
 from flask import current_app as app
 import jwt
+import json
 
 from model import User
 
@@ -35,4 +36,16 @@ def admin_required(f):
         if not current_user.admin:
             return jsonify({'message': 'Cannot perform that function!'}), 403
         return f(current_user, *args, **kwargs)
+    return decorated
+
+
+def load_data(f):
+    """Decorator para comprobar que el json enviado esta bien formateado."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        try:
+            data = json.loads(request.data)
+        except:
+            return jsonify({'message': 'JSON bad formatted!'}), 400
+        return f(data, *args, **kwargs)
     return decorated
