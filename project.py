@@ -1,8 +1,7 @@
-from flask import Blueprint, jsonify, request
-from model import Project, projects_schema, db, User, project_schema
-from decorators import token_required, admin_required
-from cerberus import Validator
-import json
+from flask import Blueprint, jsonify
+from model import Project, projects_schema, db, User, project_schema, create_project_validator, update_project_validator
+from decorators import token_required, admin_required, load_data
+
 
 project_api = Blueprint('project_api', __name__)
 
@@ -17,7 +16,6 @@ def get_all_projects(current_user):
     return jsonify({"projects": output.data})
 
 
-# TODO diferencia?
 @project_api.route('/api/v1/projects', methods=['GET'])
 @token_required
 def get_user_projects(current_user):
@@ -29,27 +27,17 @@ def get_user_projects(current_user):
 
 @project_api.route('/api/v1/projects', methods=['POST'])
 @token_required
-def create_project(current_user: User):
+@load_data
+def create_project(data, current_user: User):
     """Crea un proyecto."""
-    try:
-        data = json.loads(request.data)
-    except:
-        return jsonify({'message': 'Bad request'}), 400
-
-    schema = {
-        'name': {'type': 'string', 'required': True, 'empty': False},
-        'desc': {'type': 'string', 'empty': False}
-    }
-    validator = Validator(schema)
-
-    if validator.validate(data):
+    if create_project_validator.validate(data):
         project = Project(**data)
         db.session.add(project)
         current_user.projects.append(project)
         db.session.commit()
         return jsonify({'message': 'New project created!', 'project': project_schema.dump(project).data}), 201
     else:
-        return jsonify({'message': 'Project not created!', 'errors': validator.errors}), 400
+        return jsonify({'message': 'Project not created!', 'errors': create_project_validator.errors}), 400
 
 
 @project_api.route('/api/v1/projects/<project_id>', methods=['DELETE'])
@@ -86,14 +74,9 @@ def get_one_project(current_user, project_id):
 
 @project_api.route('/api/v1/projects/<project_id>', methods=['POST'])
 @token_required
-def update_project(current_user, project_id):
+@load_data
+def update_project(data, current_user, project_id):
     """Actualiza un proyecto."""
-    try:
-        # TODO comprobar si esta vacio? no afecta a la funcionalidad
-        data = json.loads(request.data)
-    except:
-        return jsonify({'message': 'Bad request'}), 400
-
     project = Project.query.filter_by(project_id=project_id).first()
 
     if not project:
@@ -102,17 +85,10 @@ def update_project(current_user, project_id):
     if current_user not in project.members:
         return jsonify({'message': 'You don\'t have permission to delete that project!'}), 403
 
-    schema = {
-        'name': {'type': 'string', 'empty': False},
-        'desc': {'type': 'string', 'empty': False}
-    }
-
-    validator = Validator(schema)
-
-    if validator.validate(data):
+    if update_project_validator.validate(data):
         for key, value in data.items():
             setattr(project, key, value)
         db.session.commit()
         return jsonify({'message': 'Project updated!', 'project': project_schema.dump(project).data}), 200
     else:
-        return jsonify({'message': 'Project not updated!', 'errors': validator.errors}), 400
+        return jsonify({'message': 'Project not updated!', 'errors': update_project_validator.errors}), 400
