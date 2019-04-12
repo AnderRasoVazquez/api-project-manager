@@ -6,6 +6,7 @@ from project import project_api
 from task import task_api
 from user import user_api
 from work import work_api
+from invitation import invitation_api
 from datetime import date
 from flask_heroku import Heroku
 
@@ -59,13 +60,16 @@ def _add_initial_values():
     db.session.add(task)
     db.session.commit()
 
-    user.projects.append(project)
     user.projects.append(projectTwo)
     admin.projects.append(project)
     db.session.commit()
 
     work = Work(date=date(2019, 8, 15), time=7.5, task_id=task.task_id, user_id=admin.user_id)
     db.session.add(work)
+    db.session.commit()
+
+    invitation = Invitation(user_id=admin.user_id, project_id=projectTwo.project_id)
+    db.session.add(invitation)
     db.session.commit()
 
     return jsonify({'message': 'Initial values created!'})
@@ -76,6 +80,7 @@ app.register_blueprint(user_api)
 app.register_blueprint(project_api)
 app.register_blueprint(task_api)
 app.register_blueprint(work_api)
+app.register_blueprint(invitation_api)
 
 
 if __name__ == '__main__':

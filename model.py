@@ -35,6 +35,7 @@ class User(db.Model):
 
     projects = db.relationship('Project', secondary=project_member, backref=db.backref('members'))
     works = db.relationship('Work', backref=db.backref('user'))
+    invitations = db.relationship('Invitation', backref=db.backref('user'))
 
 
 _user_creation_schema = {
@@ -52,6 +53,7 @@ class Project(db.Model):
     desc = db.Column(db.String(300))
 
     tasks = db.relationship('Task', backref=db.backref('project'))
+    invitations = db.relationship('Invitation', backref=db.backref('project'))
 
 
 _project_creation_schema = {
@@ -123,6 +125,14 @@ _work_update_schema = {
 update_work_validator = Validator(_work_update_schema)
 
 
+class Invitation(db.Model):
+    """Tabla de datos de invitaciones. Si se acepta una invitacion se añade el usuario como miembro del proyecto."""
+    # TODO igual es buena idea poner quien manda la invitacion del usuario
+    invitation_id = db.Column(db.String, default=generate_uuid, nullable=False, unique=True)
+    user_id = db.Column(db.String(50), db.ForeignKey('user.user_id'), primary_key=True)
+    project_id = db.Column(db.String(50), db.ForeignKey('project.project_id'), primary_key=True)
+
+
 class UserSchema(ma.ModelSchema):
     """Esquema para la clase usuario."""
 
@@ -173,6 +183,18 @@ class WorkSchema(ma.ModelSchema):
     )
 
 
+class InvitationSchema(ma.ModelSchema):
+    """Esquema para la clase de invitaciones."""
+
+    class Meta:
+        model = Invitation
+
+    _links = ma.Hyperlinks(
+        {"self": ma.URLFor("invitation_api.get_one_invitation", invitation_id="<invitation_id>"),
+         "collection": ma.URLFor("invitation_api.get_all_invitations")}
+    )
+
+
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 task_schema = TaskSchema()
@@ -181,3 +203,5 @@ project_schema = ProjectSchema()
 projects_schema = ProjectSchema(many=True)
 work_schema = WorkSchema()
 works_schema = WorkSchema(many=True)
+invitation_schema = InvitationSchema()
+invitations_schema = InvitationSchema(many=True)
