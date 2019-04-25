@@ -52,7 +52,9 @@ def delete_project(current_user, project_id):
     if current_user not in project.members:
         return jsonify({'message': 'You don\'t have permission to delete that project!'}), 403
 
-    db.session.delete(project)
+    project.members.remove(current_user)
+    if len(project.members) == 0:
+        db.session.delete(project)
     db.session.commit()
     return jsonify({'message': 'The project has been deleted!'})
 
@@ -92,3 +94,33 @@ def update_project(data, current_user, project_id):
         return jsonify({'message': 'Project updated!', 'project': project_schema.dump(project).data}), 200
     else:
         return jsonify({'message': 'Project not updated!', 'errors': update_project_validator.errors}), 400
+
+
+@project_api.route('/api/v1/projects/<project_id>/invite/<user_email>', methods=['PUT'])
+@token_required
+def create_invitation(current_user, project_id, user_email):
+    """Crea una invitacion."""
+    if current_user.email == user_email:
+        return jsonify({'message': 'You can\'t invite yourself!'}), 403
+
+    project = Project.query.filter_by(project_id=project_id).first()
+
+    if not project:
+        return jsonify({'message': 'No project found!'}), 404
+
+    if current_user not in project.members:
+        return jsonify({'message': 'You don\'t have permission to access that project!'}), 403
+
+    user = User.query.filter_by(email=user_email).first()
+
+    if not user:
+        return jsonify({'message': 'No user found!'}), 404
+
+    if user in project.members:
+        return jsonify({'message': 'User is already part of that project!'}), 403
+
+    project.members.append(user)
+
+    db.session.commit()
+    # TODO conectar con el FCM para notificar al usuario
+    return jsonify({"message": "User is part of project!"})
