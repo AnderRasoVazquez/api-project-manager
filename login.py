@@ -27,7 +27,7 @@ def login():
         return login_error()
 
     if check_password_hash(user.password, auth.password):
-        token = jwt.encode({'user_id': user.user_id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'])
+        token = jwt.encode({'user_id': user.user_id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24*360)}, app.config['SECRET_KEY'])
         return jsonify({'token': token.decode('UTF-8')})
 
     # pass no es correcto
