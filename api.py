@@ -6,7 +6,6 @@ from project import project_api
 from task import task_api
 from user import user_api
 from work import work_api
-from invitation import invitation_api
 from datetime import date
 from flask_heroku import Heroku
 
@@ -80,7 +79,6 @@ app.register_blueprint(user_api)
 app.register_blueprint(project_api)
 app.register_blueprint(task_api)
 app.register_blueprint(work_api)
-app.register_blueprint(invitation_api)
 
 
 if __name__ == '__main__':
