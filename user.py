@@ -1,7 +1,7 @@
 from flask import jsonify, Blueprint
 from decorators import token_required, admin_required, load_data
 from werkzeug.security import generate_password_hash
-from model import db, User, user_schema, users_schema, create_user_validator
+from model import db, User, user_schema, users_schema, create_user_validator, user_firebase_validator
 
 
 user_api = Blueprint('user_api', __name__)
@@ -61,6 +61,20 @@ def promote_user(current_user, user_id):
     user.admin = True
     db.session.commit()
     return jsonify({'message': 'User promoted!'})
+
+
+@user_api.route('/api/v1/users/token', methods=['POST'])
+@token_required
+@load_data
+def update_firebase_token(data, current_user):
+    """Convierte un usuario a administrador."""
+
+    if user_firebase_validator.validate(data):
+        current_user.firebase_token = data["firebase_token"]
+        db.session.commit()
+        return jsonify({'message': 'User firebase token updated!', 'user': user_schema.dump(current_user).data}), 200
+    else:
+        return jsonify({'message': 'User token not updated!', 'errors': user_firebase_validator.errors}), 400
 
 
 @user_api.route('/api/v1/users/<user_id>', methods=['DELETE'])

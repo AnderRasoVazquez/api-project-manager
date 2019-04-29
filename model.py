@@ -32,6 +32,7 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(80), nullable=False)
     admin = db.Column(db.Boolean, default=False)
+    firebase_token = db.Column(db.String(200))
 
     projects = db.relationship('Project', secondary=project_member, backref=db.backref('members'))
     works = db.relationship('Work', backref=db.backref('user'))
@@ -44,6 +45,11 @@ _user_creation_schema = {
     'password': {'type': 'string', 'required': True, 'empty': False}
 }
 create_user_validator = Validator(_user_creation_schema)
+
+_user_firebase_schema = {
+    'firebase_token': {'type': 'string', 'required': True, 'empty': False}
+}
+user_firebase_validator = Validator(_user_firebase_schema)
 
 
 class Project(db.Model):
@@ -137,7 +143,7 @@ class UserSchema(ma.ModelSchema):
     """Esquema para la clase usuario."""
 
     class Meta:
-        fields = ('user_id', 'name', 'email', 'admin', '_links')
+        fields = ('user_id', 'name', 'email', 'admin', 'firebase_token', '_links')
 
     _links = ma.Hyperlinks(
         {"self": ma.URLFor("user_api.get_one_user", user_id="<user_id>"),
