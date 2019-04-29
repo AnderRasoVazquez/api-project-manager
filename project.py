@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify
 from model import Project, projects_schema, db, User, project_schema, create_project_validator, update_project_validator
 from decorators import token_required, admin_required, load_data
+import json
+import requests
 
 
 project_api = Blueprint('project_api', __name__)
@@ -116,11 +118,31 @@ def create_invitation(current_user, project_id, user_email):
     if not user:
         return jsonify({'message': 'No user found!'}), 404
 
-    if user in project.members:
-        return jsonify({'message': 'User is already part of that project!'}), 403
+    # TODO comentado por debug
+    # if user in project.members:
+    #     return jsonify({'message': 'User is already part of that project!'}), 403
 
     project.members.append(user)
 
     db.session.commit()
-    # TODO conectar con el FCM para notificar al usuario
+
+    # Conecta al servidor firebase
+    firebase_server_token = "AAAAlWsV5Ew:APA91bGtFKoXq3uzfnuvAtqJslXWzXpujpEJDeZTrjVXufRvMlX05U_Pbk9JPtoa1b0-OYxZ8PBQz5oJFaRDyWkz5WJR3VpQASdzpzTqJ1FZxry1y4_s0BZAIL2bfICOAj46xwcuK84Q"
+    headers = {
+        "Authorization": "key=" + firebase_server_token,
+        "Content-Type": "application/json"
+    }
+    print(str(headers))
+    body = {
+        "data": {
+            "message": "New project member",
+            "project": project.name,
+            "user": current_user.name
+        },
+        "to": user.firebase_token
+    }
+    response = requests.post("https://fcm.googleapis.com/fcm/send", data=json.dumps(body), headers=headers)
+    print(user.firebase_token)
+    print(str(response.status_code))
+
     return jsonify({"message": "User is part of project!"})
