@@ -67,10 +67,6 @@ def _add_initial_values():
     db.session.add(work)
     db.session.commit()
 
-    invitation = Invitation(user_id=admin.user_id, project_id=projectTwo.project_id)
-    db.session.add(invitation)
-    db.session.commit()
-
     return jsonify({'message': 'Initial values created!'})
 
 
