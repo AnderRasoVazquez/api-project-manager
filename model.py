@@ -57,6 +57,7 @@ class Project(db.Model):
     project_id = db.Column(db.String, primary_key=True, default=generate_uuid)
     name = db.Column(db.String(100), nullable=False)
     desc = db.Column(db.String(300))
+    img = db.Column(db.TEXT, default="")
 
     tasks = db.relationship('Task', backref=db.backref('project'))
     invitations = db.relationship('Invitation', backref=db.backref('project'))
@@ -64,13 +65,15 @@ class Project(db.Model):
 
 _project_creation_schema = {
     'name': {'type': 'string', 'required': True, 'empty': False},
-    'desc': {'type': 'string', 'empty': False}
+    'desc': {'type': 'string', 'empty': False},
+    'img': {'type': 'string', 'empty': False}
 }
 create_project_validator = Validator(_project_creation_schema)
 
 _project_update_schema = {
     'name': {'type': 'string', 'empty': False},
-    'desc': {'type': 'string', 'empty': False}
+    'desc': {'type': 'string', 'empty': False},
+    'img': {'type': 'string', 'empty': False}
 }
 update_project_validator = Validator(_project_update_schema)
 
